@@ -1,5 +1,5 @@
 import com.gu.openplatform.contentapi.Api
-import org.joda.time.{DateMidnight, LocalDate, DateTime}
+import org.joda.time.DateMidnight
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.{BeforeAndAfterEach, FeatureSpec}
 
@@ -11,12 +11,25 @@ class ExampleUsageTest extends FeatureSpec with ShouldMatchers with BeforeAndAft
     Thread.sleep(500)
   }
 
+  feature("Async calls:") {
+    
+    scenario("get the 3 newest pages") {
+      val pageFutures = for (pageNumber <- (1 to 3)) yield {
+        Api.search.pageSize(5).page(pageNumber).response
+      }
+    
+      val pages = pageFutures flatMap { _.get.results }
+      
+      pages.size should be (15)
+    }
+    
+  }
 
   feature("Pagination:") {
 
     scenario("get the most recent 10 items") {
 
-      val latest10Items = Api.search.response
+      val latest10Items = Api.search.response.get
 
       latest10Items.pageSize should be (10)
       latest10Items.results.foreach ( item => println(item.webTitle))
@@ -24,7 +37,7 @@ class ExampleUsageTest extends FeatureSpec with ShouldMatchers with BeforeAndAft
 
     scenario("get the second page of 10 recent items") {
 
-      val items11to20 = Api.search.page(2).response
+      val items11to20 = Api.search.page(2).response.get
 
       items11to20.pageSize should be (10)
       items11to20.currentPage should be (2)
@@ -33,7 +46,7 @@ class ExampleUsageTest extends FeatureSpec with ShouldMatchers with BeforeAndAft
 
     scenario("get the most recent 25 items") {
 
-      val items11to20 = Api.search.pageSize(25).response
+      val items11to20 = Api.search.pageSize(25).response.get
 
       items11to20.pageSize should be (25)
       items11to20.results.foreach ( item => println(item.webTitle))

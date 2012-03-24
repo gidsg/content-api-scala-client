@@ -1,11 +1,13 @@
 package com.gu.openplatform.contentapi
 
 
-import connection.{JavaNetHttp, Http}
+import connection.{NingHttp, Http}
 import java.net.URLEncoder
 import com.gu.openplatform.contentapi.parser.JsonParser
+import model._
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.ReadableInstant
+import java.util.concurrent.Future
 
 
 // thrown when an "expected" error is thrown by the api
@@ -26,24 +28,24 @@ abstract class Api extends Http with JsonParser {
   class FoldersQuery
     extends GeneralParameters[FoldersQuery]
     with FilterParameters[FoldersQuery] {
-    lazy val response = parseFolders(fetch(targetUrl + "/folders", parameters))
+    lazy val response: Future[FoldersResponse] = parseFolders(fetch(targetUrl + "/folders", parameters))
   }
 
   object FoldersQuery {
-    implicit def asResponse(q: FoldersQuery) = q.response
-    implicit def asSections(q: FoldersQuery) = q.response.results
+    implicit def asResponse(q: FoldersQuery) = q.response.get
+    implicit def asSections(q: FoldersQuery) = q.response.get.results
   }
 
 
   class SectionsQuery
     extends GeneralParameters[SectionsQuery]
     with FilterParameters[SectionsQuery] {
-    lazy val response = parseSections(fetch(targetUrl + "/sections", parameters))
+    lazy val response: Future[SectionsResponse] = parseSections(fetch(targetUrl + "/sections", parameters))
   }
 
   object SectionsQuery {
-    implicit def asResponse(q: SectionsQuery) = q.response
-    implicit def asSections(q: SectionsQuery) = q.response.results
+    implicit def asResponse(q: SectionsQuery) = q.response.get
+    implicit def asSections(q: SectionsQuery) = q.response.get.results
   }
 
 
@@ -54,12 +56,12 @@ abstract class Api extends Http with JsonParser {
           with RefererenceParameters[TagsQuery]
           with ShowReferenceParameters[TagsQuery] {
     object tagType extends StringParameter(self, "type")
-    lazy val response = parseTags(fetch(targetUrl + "/tags", parameters))
+    lazy val response: Future[TagsResponse] = parseTags(fetch(targetUrl + "/tags", parameters))
   }
 
   object TagsQuery {
-    implicit def asResponse(q: TagsQuery) = q.response
-    implicit def asTags(q: TagsQuery) = q.response.results
+    implicit def asResponse(q: TagsQuery) = q.response.get
+    implicit def asTags(q: TagsQuery) = q.response.get.results
   }
 
 
@@ -72,16 +74,13 @@ abstract class Api extends Http with JsonParser {
           with ContentFilterParameters[SearchQuery]
           with RefererenceParameters[SearchQuery]
           with ShowReferenceParameters[SearchQuery] {
-    lazy val response = parseSearch(fetch(targetUrl + "/search", parameters))
+    lazy val response: Future[SearchResponse] = parseSearch(fetch(targetUrl + "/search", parameters))
   }
 
   object SearchQuery {
-    implicit def asResponse(q: SearchQuery) = q.response
-    implicit def asContent(q: SearchQuery) = q.response.results
+    implicit def asResponse(q: SearchQuery) = q.response.get
+    implicit def asContent(q: SearchQuery) = q.response.get.results
   }
-
-
-
 
   class ItemQuery extends GeneralParameters[ItemQuery]
           with ShowParameters[ItemQuery]
@@ -98,14 +97,14 @@ abstract class Api extends Http with JsonParser {
 
     def itemId(contentId: String): this.type = apiUrl(targetUrl + "/" + contentId)
 
-    lazy val response = parseItem(
+    lazy val response: Future[ItemResponse] = parseItem(
       fetch(
         _apiUrl.getOrElse(throw new Exception("No api url provided to item query, ensure withApiUrl is called")),
         parameters))
   }
 
   object ItemQuery {
-    implicit def asResponse(q: ItemQuery) = q.response
+    implicit def asResponse(q: ItemQuery) = q.response.get
   }
 
 
@@ -167,7 +166,7 @@ abstract class Api extends Http with JsonParser {
 
 
 
-  protected def fetch(url: String, parameters: Map[String, Any] = Map.empty): String = {
+  protected def fetch(url: String, parameters: Map[String, Any] = Map.empty): Future[String] = {
     require(!url.contains('?'), "must not specify parameters in url")
 
     def encodeParameter(p: Any): String = p match {
@@ -178,14 +177,16 @@ abstract class Api extends Http with JsonParser {
     val queryString = parameters.map {case (k, v) => k + "=" + encodeParameter(v)}.mkString("&")
     val target = url + "?" + queryString
 
-    val response = GET(target, List("User-Agent" -> "scala-api-client", "Accept" -> "application/json"))
+    val responseFuture = GET(target, List("User-Agent" -> "scala-api-client", "Accept" -> "application/json"))
 
-    if (List(200, 302) contains response.statusCode) {
-      response.body
-    } else {
-      throw new ApiError(response.statusCode, response.statusMessage)
+    wrapFuture(responseFuture){ response =>
+      if (List(200, 302) contains response.statusCode) {
+        response.body
+      } else {
+        throw new ApiError(response.statusCode, response.statusMessage)
+      }
     }
   }
 }
 
-object Api extends Api with JavaNetHttp
+object Api extends Api with NingHttp
