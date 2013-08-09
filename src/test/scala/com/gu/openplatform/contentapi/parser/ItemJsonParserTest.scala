@@ -29,7 +29,7 @@ class ItemJsonParserTest extends FlatSpec with ShouldMatchers {
 
   "item endpoint parser" should "parse basic reponse header" in {
     tagItemResponse.status should be ("ok")
-    tagItemResponse.userTier should be ("free")
+//    tagItemResponse.userTier should be ("free")
   }
 
   it should "parse pagination" in {

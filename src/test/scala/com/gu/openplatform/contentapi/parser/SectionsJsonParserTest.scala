@@ -12,7 +12,7 @@ class SectionsJsonParserTest extends FlatSpec with ShouldMatchers {
 
   "sections endpoint parser" should "parse basic reponse header" in {
     sectionsResponse.status should be ("ok")
-    sectionsResponse.userTier should be ("free")
+//    sectionsResponse.userTier should be ("free")
     sectionsResponse.total should be (39)
   }
 

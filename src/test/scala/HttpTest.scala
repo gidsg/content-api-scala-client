@@ -13,6 +13,8 @@ class HttpTest extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
 
   info("Tests that each type of client can actually perform a call to the api")
 
+  val knownItemId = "science/political-science/2013/jul/29/messing-nature-geoengineering-green-thought"
+
   "ApacheSyncHttpClient" should "be able to call the api" in {
     testClient(new SyncApi with ApacheSyncHttpClient)
   }
@@ -41,10 +43,10 @@ class HttpTest extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
   "DispatchAsyncHttp" should "be able to call the api" in {
 
     val promisedContent: Future[Content] = for {
-      response <- DispatchAsyncApi.item.itemId("commentisfree/2012/aug/01/cyclists-like-pedestrians-must-get-angry").response
+      response <- DispatchAsyncApi.item.itemId(knownItemId).response
     } yield response.content.get
 
-    promisedContent.apply().id should be ("commentisfree/2012/aug/01/cyclists-like-pedestrians-must-get-angry")
+    promisedContent.apply().id should be (knownItemId)
   }
 
   "DispatchAsyncHttp" should "return API errors as a broken promise" in {
@@ -58,10 +60,10 @@ class HttpTest extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
   }
 
   private def testClient(api: SyncApi) {
-    val content = api.item.itemId("commentisfree/2012/aug/01/cyclists-like-pedestrians-must-get-angry").response
+    val content = api.item.itemId(knownItemId).response
       .content.get
 
-    content.id should be ("commentisfree/2012/aug/01/cyclists-like-pedestrians-must-get-angry")
+    content.id should be (knownItemId)
   }
 
 }

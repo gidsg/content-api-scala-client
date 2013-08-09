@@ -9,19 +9,18 @@ package com.gu.openplatform.contentapi.model
 //  So Lists are never Option[List], you will just get back Nil if the
 //  the element was not present in the response
 
-
 // Responses
 
 // /search
-case class SearchResponse(
+case class SearchResponse (
         status: String,
-        userTier: String,
+        userTier: Option[String],
         total: Int,
-        startIndex: Int,
-        pageSize: Int,
-        currentPage: Int,
-        pages: Int,
-        orderBy: String,
+        startIndex: Option[Int],
+        pageSize: Option[Int],
+        currentPage: Option[Int],
+        pages: Option[Int],
+        orderBy: Option[String],
         didYouMean: Option[String],
         results: List[Content],
         refinementGroups: List[RefinementGroup],
@@ -31,20 +30,19 @@ case class SearchResponse(
 // /tags
 case class TagsResponse(
         status: String,
-        userTier: String,
+        userTier: Option[String],
         total: Int,
-        startIndex: Int,
-        pageSize: Int,
-        currentPage: Int,
-        pages: Int,
+        startIndex: Option[Int],
+        pageSize: Option[Int],
+        currentPage: Option[Int],
+        pages: Option[Int],
         results: List[Tag]
 )
-
 
 // /sections
 case class SectionsResponse(
         status: String,
-        userTier: String,
+        userTier: Option[String],
         total: Int,
         results: List[Section]
 )
@@ -52,19 +50,19 @@ case class SectionsResponse(
 // /sections
 case class FoldersResponse(
         status: String,
-        userTier: String,
+        userTier: Option[String],
         total: Int,
-        startIndex: Int,
-        pageSize: Int,
-        currentPage: Int,
-        pages: Int,
+        startIndex: Option[Int],
+        pageSize: Option[Int],
+        currentPage: Option[Int],
+        pages: Option[Int],
         results: List[Folder]
-        )
+)
 
 // /anythingelse
 case class ItemResponse(
         status: String,
-        userTier: String,
+        userTier: Option[String],
         total: Option[Int],
         startIndex: Option[Int],
         pageSize: Option[Int],
@@ -81,4 +79,4 @@ case class ItemResponse(
         mostViewed: List[Content],
         storyPackage: List[Content],
         leadContent: List[Content]
-        )
+)
